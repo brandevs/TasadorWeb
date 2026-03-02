@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TasadorWeb — Formulario de Tasación</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}"/>
+</head>
+<body>
+
+  <!-- ══ ENCABEZADO ══════════════════════════════════════════════════════════ -->
+  <header>
+    <div class="header-inner">
+      <div class="header-logo">🏛️</div>
+      <div>
+        <h1>TasadorWeb</h1>
+        <p class="header-sub">Sistema de Tasación Inmobiliaria — Colegio de Martilleros</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ CONTENEDOR PRINCIPAL ════════════════════════════════════════════════ -->
+  <main>
+    <form action="/generar-pdf" method="POST" id="formTasacion">
+
+      <!-- Campo oculto: PDF base (permite cambiar de formulario sin tocar el código) -->
+      <input type="hidden" name="pdf_base" value="minutaRobledo.pdf" />
+
+      <!-- ── SECCIÓN 1: DATOS DEL PROFESIONAL ──────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">👤</span> Datos del Profesional
+        </h2>
+        <div class="grid grid-2">
+
+          <div class="campo">
+            <label for="ApellidoYNombre">Apellido y Nombre</label>
+            <input type="text" id="ApellidoYNombre" name="ApellidoYNombre"
+                   placeholder="Ej: García, Juan Carlos" />
+          </div>
+
+          <div class="campo">
+            <label for="matricula">Matrícula</label>
+            <input type="text" id="matricula" name="matricula"
+                   placeholder="Ej: 12345" />
+          </div>
+
+          <div class="campo">
+            <label for="Documento">Documento (DNI / CUIT)</label>
+            <input type="text" id="Documento" name="Documento"
+                   placeholder="Ej: 20-12345678-9" />
+          </div>
+
+          <div class="campo">
+            <label for="FECHA">Fecha</label>
+            <input type="date" id="FECHA" name="FECHA" />
+          </div>
+
+          <div class="campo">
+            <label for="hojas">N° de Hojas</label>
+            <input type="text" id="hojas" name="hojas" placeholder="Ej: 3" />
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── SECCIÓN 2: DATOS DEL TITULAR ──────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">🏠</span> Datos del Titular / Inmueble
+        </h2>
+        <div class="grid grid-2">
+
+          <div class="campo">
+            <label for="titular">Titular</label>
+            <input type="text" id="titular" name="titular"
+                   placeholder="Nombre del propietario" />
+          </div>
+
+          <div class="campo">
+            <label for="domicilio">Domicilio</label>
+            <input type="text" id="domicilio" name="domicilio"
+                   placeholder="Dirección completa" />
+          </div>
+
+          <div class="campo">
+            <label for="calle">Calle</label>
+            <input type="text" id="calle" name="calle"
+                   placeholder="Nombre de la calle" />
+          </div>
+
+          <div class="campo">
+            <label for="nro">Número</label>
+            <input type="text" id="nro" name="nro" placeholder="Ej: 1234" />
+          </div>
+
+          <div class="campo">
+            <label for="entreCalles">Entre Calles</label>
+            <input type="text" id="entreCalles" name="entreCalles"
+                   placeholder="Ej: Rivadavia y San Martín" />
+          </div>
+
+          <div class="campo">
+            <label for="paraje">Paraje / Barrio</label>
+            <input type="text" id="paraje" name="paraje"
+                   placeholder="Ej: Barrio Norte" />
+          </div>
+
+          <div class="campo">
+            <label for="localidad">Localidad</label>
+            <input type="text" id="localidad" name="localidad"
+                   placeholder="Ej: Mar del Plata" />
+          </div>
+
+          <div class="campo">
+            <label for="partido">Partido</label>
+            <input type="text" id="partido" name="partido"
+                   placeholder="Ej: General Pueyrredón" />
+          </div>
+
+          <div class="campo">
+            <label for="provincia">Provincia</label>
+            <input type="text" id="provincia" name="provincia"
+                   placeholder="Ej: Buenos Aires" />
+          </div>
+
+          <div class="campo">
+            <label for="partida">Partida</label>
+            <input type="text" id="partida" name="partida"
+                   placeholder="N° de partida inmobiliaria" />
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── SECCIÓN 3: DATOS CATASTRALES ──────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">📐</span> Datos Catastrales y del Lote
+        </h2>
+        <div class="grid grid-2">
+
+          <div class="campo">
+            <label for="Nomenclatura">Nomenclatura Catastral</label>
+            <input type="text" id="Nomenclatura" name="Nomenclatura"
+                  placeholder="Ej: Circ. I — Secc. A — Mz. 123 — P. 4" />
+          </div>
+
+          <div class="campo">
+            <label for="medidaLote">Medida del Lote (m²)</label>
+            <input type="text" id="medidaLote" name="medidaLote"
+                  placeholder="Ej: 300" />
+          </div>
+
+          <div class="campo">
+            <label for="usoSuelo">Uso del Suelo</label>
+            <input type="text" id="usoSuelo" name="usoSuelo"
+                  placeholder="Ej: Residencial" />
+          </div>
+
+          <div class="campo">
+            <label for="caracter">Carácter</label>
+            <input type="text" id="caracter" name="caracter"
+                  placeholder="Ej: Urbano / Rural" />
+          </div>
+
+          <div class="campo">
+            <label for="Densidad">Densidad</label>
+            <input type="text" id="Densidad" name="Densidad"
+                  placeholder="Ej: Alta / Media / Baja" />
+          </div>
+
+          <div class="campo">
+            <label for="Fos">FOS</label>
+            <input type="text" id="Fos" name="Fos" placeholder="Ej: 0.6" />
+          </div>
+
+          <div class="campo">
+            <label for="Fot">FOT</label>
+            <input type="text" id="Fot" name="Fot" placeholder="Ej: 1.2" />
+          </div>
+
+          <!-- DC, DI, VF, OT son checkboxes en el PDF original (/Btn) -->
+          <div class="campo">
+            <label>Opciones técnicas</label>
+            <div class="checkboxes">
+              <label class="check-label">
+                <input type="checkbox" name="DC" /> DC
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="DI" /> DI
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="VF" /> VF
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="OT" /> OT
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── SECCIÓN 4: SUPERFICIES ─────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">📏</span> Superficies Construidas
+        </h2>
+        <div class="grid grid-2">
+
+          <div class="campo">
+            <label for="SupCubierta">Sup. Cubierta (m²)</label>
+            <input type="number" step="0.01" id="SupCubierta" name="SupCubierta"
+                   placeholder="Ej: 120.50" />
+          </div>
+
+          <div class="campo">
+            <label for="SupSemiCubierta">Sup. Semi-Cubierta (m²)</label>
+            <input type="number" step="0.01" id="SupSemiCubierta" name="SupSemiCubierta"
+                   placeholder="Ej: 30.00" />
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── SECCIÓN 5: VALUACIÓN ───────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">💰</span> Valuación
+        </h2>
+        <div class="grid grid-2">
+
+          <div class="campo">
+            <label for="VF">Valor Fiscal ($)</label>
+            <input type="text" id="VF" name="VF" placeholder="Ej: 5.000.000" />
+          </div>
+
+          <div class="campo">
+            <label for="ValorMercado">Valor de Mercado ($)</label>
+            <input type="text" id="ValorMercado" name="ValorMercado"
+                   placeholder="Ej: 12.000.000" />
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── SECCIÓN 6: OBSERVACIONES ───────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">📝</span> Observaciones
+        </h2>
+        <div class="grid grid-1">
+
+          <div class="campo">
+            <label for="detallar">Observaciones</label>
+            <textarea id="detallar" name="detallar" rows="6"
+                      maxlength="1000"
+                      placeholder="Escribí todas las observaciones aquí. Si superan el espacio de la primera hoja, el texto continuará automáticamente en la segunda."></textarea>
+            <small class="contador" id="contadorDetallar">0 / 1000 caracteres</small>
+          </div>
+
+        </div>
+      </section>
+    
+      
+
+      <!-- ── BOTONES DE ACCIÓN ──────────────────────────────────────────── -->
+      <div class="acciones">
+        <button type="button" class="btn btn-secundario" onclick="limpiarFormulario()">
+          🗑️ Limpiar formulario
+        </button>
+        <button type="submit" class="btn btn-principal">
+          📄 Generar y Descargar PDF
+        </button>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
+  <footer>
+    <p>TasadorWeb © 2026 — Sistema local para uso profesional exclusivo</p>
+  </footer>
+
+  <!-- ══ JAVASCRIPT MÍNIMO ═══════════════════════════════════════════════════ -->
+  <script>
+    // Limpiar todos los campos del formulario
+    function limpiarFormulario() {
+      if (confirm("¿Deseas limpiar todos los campos para una nueva tasación?")) {
+        document.getElementById("formTasacion").reset();
+      }
+    }
+
+    // Feedback visual al enviar: deshabilita el botón para evitar doble clic
+    document.getElementById("formTasacion").addEventListener("submit", function () {
+      const btn = this.querySelector(".btn-principal");
+      btn.textContent = "⏳ Generando PDF...";
+      btn.disabled = true;
+      // Re-habilitar después de 4 segundos (por si el usuario quiere generar otro)
+      setTimeout(() => {
+        btn.textContent = "📄 Generar y Descargar PDF";
+        btn.disabled = false;
+      }, 4000);
+    });
+  </script>
+
+  <script>
+    // Contador de caracteres para el campo observaciones
+    const textarea = document.getElementById("detallar");
+    const contador = document.getElementById("contadorDetallar");
+
+    textarea.addEventListener("input", function () {
+      const largo = this.value.length;
+      contador.textContent = `${largo} / 1000 caracteres`;
+      // Aviso visual cuando se acerca al límite
+      contador.style.color = largo > 800 ? "#e53e3e" : "#718096";
+    });
+  </script>
+
+</body>
+</html>

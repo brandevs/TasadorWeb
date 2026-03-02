@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   estilos.css — TasadorWeb
+   Paleta profesional: azul marino institucional + blanco + gris claro
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── RESET Y BASE ────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --azul-oscuro:   #1a2e4a;
+  --azul-medio:    #2c5282;
+  --azul-claro:    #4a90d9;
+  --azul-hover:    #1e3a5f;
+  --blanco:        #ffffff;
+  --gris-fondo:    #f0f4f8;
+  --gris-borde:    #cbd5e0;
+  --gris-texto:    #4a5568;
+  --gris-label:    #2d3748;
+  --verde-exito:   #276749;
+  --sombra-card:   0 2px 8px rgba(0, 0, 0, 0.08);
+  --sombra-hover:  0 4px 16px rgba(0, 0, 0, 0.14);
+  --radio:         8px;
+  --radio-input:   5px;
+  --fuente:        'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  font-size: 15px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--fuente);
+  background-color: var(--gris-fondo);
+  color: var(--gris-label);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────────────── */
+header {
+  background: linear-gradient(135deg, var(--azul-oscuro) 0%, var(--azul-medio) 100%);
+  color: var(--blanco);
+  padding: 1.2rem 2rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-logo {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.header-sub {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+/* ── MAIN / CONTENEDOR ───────────────────────────────────────────────────── */
+main {
+  flex: 1;
+  max-width: 960px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 0 1.2rem 3rem;
+}
+
+/* ── CARDS (secciones del formulario) ────────────────────────────────────── */
+.card {
+  background: var(--blanco);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-card);
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 1.4rem;
+  border-top: 4px solid var(--azul-claro);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--sombra-hover);
+}
+
+/* ── TÍTULO DE SECCIÓN ───────────────────────────────────────────────────── */
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--azul-oscuro);
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.section-icon {
+  font-size: 1.1rem;
+}
+
+/* ── GRILLAS ─────────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  gap: 1rem 1.4rem;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-1 {
+  grid-template-columns: 1fr;
+}
+
+/* ── CAMPOS INDIVIDUALES ─────────────────────────────────────────────────── */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.campo label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gris-texto);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── INPUTS, SELECTS, TEXTAREAS ──────────────────────────────────────────── */
+.campo input,
+.campo textarea,
+.campo select {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid var(--gris-borde);
+  border-radius: var(--radio-input);
+  font-size: 0.92rem;
+  font-family: var(--fuente);
+  color: var(--gris-label);
+  background: #fafbfc;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  outline: none;
+}
+
+.campo input:focus,
+.campo textarea:focus,
+.campo select:focus {
+  border-color: var(--azul-claro);
+  background: var(--blanco);
+  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+}
+
+.campo input::placeholder,
+.campo textarea::placeholder {
+  color: #a0aec0;
+  font-size: 0.85rem;
+}
+
+.campo textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+/* Input tipo date: normalizar apariencia */
+.campo input[type="date"] {
+  cursor: pointer;
+}
+
+/* Input tipo number: ocultar flechas (todos los navegadores) */
+.campo input[type="number"] {
+  appearance: textfield;
+}
+
+/* Input tipo number: ocultar flechas en Chrome/Safari */
+.campo input[type="number"]::-webkit-outer-spin-button,
+.campo input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+/* ── BOTONES DE ACCIÓN ───────────────────────────────────────────────────── */
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.8rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.75rem 1.8rem;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--fuente);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Botón principal: Generar PDF */
+.btn-principal {
+  background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-claro) 100%);
+  color: var(--blanco);
+  box-shadow: 0 3px 10px rgba(44, 82, 130, 0.35);
+  min-width: 220px;
+}
+
+.btn-principal:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--azul-hover) 0%, var(--azul-medio) 100%);
+  box-shadow: 0 5px 15px rgba(44, 82, 130, 0.45);
+}
+
+.btn-principal:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Botón secundario: Limpiar */
+.btn-secundario {
+  background: var(--blanco);
+  color: var(--gris-texto);
+  border: 1.5px solid var(--gris-borde);
+}
+
+.btn-secundario:hover {
+  background: var(--gris-fondo);
+  border-color: #a0aec0;
+}
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+footer {
+  background: var(--azul-oscuro);
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.3px;
+  margin-top: auto;
+}
+
+/* ── RESPONSIVE: tablets y móviles ──────────────────────────────────────── */
+@media (max-width: 680px) {
+  header {
+    padding: 1rem 1.2rem;
+  }
+
+  header h1 {
+    font-size: 1.3rem;
+  }
+
+  main {
+    padding: 0 0.8rem 2rem;
+    margin-top: 1.2rem;
+  }
+
+  .card {
+    padding: 1.2rem 1rem;
+  }
+
+  /* En móvil: una sola columna */
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .acciones {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ── UTILIDADES ──────────────────────────────────────────────────────────── */
+
+/* Resalta campos obligatorios si se agrega la clase .requerido */
+.campo.requerido label::after {
+  content: " *";
+  color: #e53e3e;
+}
+
+/* Checkboxes */
+.checkboxes {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  padding-top: 0.3rem;
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--gris-label);
+  cursor: pointer;
+}
+
+.check-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--azul-claro);
+  cursor: pointer;
+}
+
+/* Contador de caracteres */
+.contador {
+  font-size: 0.75rem;
+  color: #718096;
+  text-align: right;
+  margin-top: 2px;
+}
