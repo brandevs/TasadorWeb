@@ -8,7 +8,6 @@
 </head>
 <body>
 
-  <!-- ══ ENCABEZADO ══════════════════════════════════════════════════════════ -->
   <header>
     <div class="header-inner">
       <div class="header-logo">🏛️</div>
@@ -19,14 +18,12 @@
     </div>
   </header>
 
-  <!-- ══ CONTENEDOR PRINCIPAL ════════════════════════════════════════════════ -->
   <main>
     <form action="/generar-pdf" method="POST" id="formTasacion">
 
-      <!-- Campo oculto: PDF base (permite cambiar de formulario sin tocar el código) -->
       <input type="hidden" name="pdf_base" value="minutaRobledo.pdf" />
 
-      <!-- ── SECCIÓN 1: DATOS DEL PROFESIONAL ──────────────────────────── -->
+      <!-- SECCIÓN 1: DATOS DEL PROFESIONAL -->
       <section class="card">
         <h2 class="section-title">
           <span class="section-icon">👤</span> Datos del Profesional
@@ -64,7 +61,7 @@
         </div>
       </section>
 
-      <!-- ── SECCIÓN 2: DATOS DEL TITULAR ──────────────────────────────── -->
+      <!-- SECCIÓN 2: DATOS DEL TITULAR -->
       <section class="card">
         <h2 class="section-title">
           <span class="section-icon">🏠</span> Datos del Titular / Inmueble
@@ -133,7 +130,7 @@
         </div>
       </section>
 
-      <!-- ── SECCIÓN 3: DATOS CATASTRALES ──────────────────────────────── -->
+      <!-- SECCIÓN 3: DATOS CATASTRALES -->
       <section class="card">
         <h2 class="section-title">
           <span class="section-icon">📐</span> Datos Catastrales y del Lote
@@ -180,29 +177,35 @@
             <input type="text" id="Fot" name="Fot" placeholder="Ej: 1.2" />
           </div>
 
-          <!-- DC, DI, VF, OT son checkboxes en el PDF original (/Btn) -->
+          <!-- Tipo de inmueble -->
           <div class="campo">
-            <label>Opciones técnicas</label>
+            <label>Tipo de Inmueble</label>
             <div class="checkboxes">
               <label class="check-label">
-                <input type="checkbox" name="DC" /> DC
+                <input type="checkbox" name="VF" /> Vivienda familiar
               </label>
               <label class="check-label">
-                <input type="checkbox" name="DI" /> DI
+                <input type="checkbox" name="DC" /> Destino comercial
               </label>
               <label class="check-label">
-                <input type="checkbox" name="VF" /> VF
+                <input type="checkbox" name="DI" /> Destino industrial
               </label>
               <label class="check-label">
-                <input type="checkbox" name="OT" /> OT
+                <input type="checkbox" name="OT" /> Otros
               </label>
             </div>
+          </div>
+
+          <div class="campo">
+            <label for="detallar_otros">Detallar (si marcó "Otros")</label>
+            <input type="text" id="detallar_otros" name="detallar_otros"
+                   placeholder="Especificá el tipo de inmueble" />
           </div>
 
         </div>
       </section>
 
-      <!-- ── SECCIÓN 4: SUPERFICIES ─────────────────────────────────────── -->
+      <!-- SECCIÓN 4: SUPERFICIES -->
       <section class="card">
         <h2 class="section-title">
           <span class="section-icon">📏</span> Superficies Construidas
@@ -224,7 +227,7 @@
         </div>
       </section>
 
-      <!-- ── SECCIÓN 5: VALUACIÓN ───────────────────────────────────────── -->
+      <!-- SECCIÓN 5: VALUACIÓN -->
       <section class="card">
         <h2 class="section-title">
           <span class="section-icon">💰</span> Valuación
@@ -245,7 +248,7 @@
         </div>
       </section>
 
-      <!-- ── SECCIÓN 6: OBSERVACIONES ───────────────────────────────────── -->
+      <!-- SECCIÓN 6: OBSERVACIONES -->
       <section class="card">
         <h2 class="section-title">
           <span class="section-icon">📝</span> Observaciones
@@ -254,18 +257,16 @@
 
           <div class="campo">
             <label for="detallar">Observaciones</label>
-            <textarea id="detallar" name="detallar" rows="6"
-                      maxlength="1000"
+            <textarea id="detallar" name="detallar" rows="10"
+                      maxlength="6700"
                       placeholder="Escribí todas las observaciones aquí. Si superan el espacio de la primera hoja, el texto continuará automáticamente en la segunda."></textarea>
-            <small class="contador" id="contadorDetallar">0 / 1000 caracteres</small>
+            <small class="contador" id="contadorDetallar">0 / 6700 caracteres</small>
           </div>
 
         </div>
       </section>
-    
-      
 
-      <!-- ── BOTONES DE ACCIÓN ──────────────────────────────────────────── -->
+      <!-- BOTONES -->
       <div class="acciones">
         <button type="button" class="btn btn-secundario" onclick="limpiarFormulario()">
           🗑️ Limpiar formulario
@@ -278,26 +279,23 @@
     </form>
   </main>
 
-  <!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
   <footer>
     <p>TasadorWeb © 2026 — Sistema local para uso profesional exclusivo</p>
   </footer>
 
-  <!-- ══ JAVASCRIPT MÍNIMO ═══════════════════════════════════════════════════ -->
   <script>
-    // Limpiar todos los campos del formulario
     function limpiarFormulario() {
       if (confirm("¿Deseas limpiar todos los campos para una nueva tasación?")) {
         document.getElementById("formTasacion").reset();
+        document.getElementById("contadorDetallar").textContent = "0 / 6700 caracteres";
+        document.getElementById("contadorDetallar").style.color = "#718096";
       }
     }
 
-    // Feedback visual al enviar: deshabilita el botón para evitar doble clic
     document.getElementById("formTasacion").addEventListener("submit", function () {
       const btn = this.querySelector(".btn-principal");
       btn.textContent = "⏳ Generando PDF...";
       btn.disabled = true;
-      // Re-habilitar después de 4 segundos (por si el usuario quiere generar otro)
       setTimeout(() => {
         btn.textContent = "📄 Generar y Descargar PDF";
         btn.disabled = false;
@@ -306,15 +304,14 @@
   </script>
 
   <script>
-    // Contador de caracteres para el campo observaciones
     const textarea = document.getElementById("detallar");
     const contador = document.getElementById("contadorDetallar");
+    const MAX = 6700;
 
     textarea.addEventListener("input", function () {
       const largo = this.value.length;
-      contador.textContent = `${largo} / 1000 caracteres`;
-      // Aviso visual cuando se acerca al límite
-      contador.style.color = largo > 800 ? "#e53e3e" : "#718096";
+      contador.textContent = `${largo} / ${MAX} caracteres`;
+      contador.style.color = largo > MAX * 0.9 ? "#e53e3e" : "#718096";
     });
   </script>
 

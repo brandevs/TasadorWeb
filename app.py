@@ -1,12 +1,16 @@
 """
-app.py — TasadorWeb
+app.py - TasadorWeb
 """
 
 import os
+import io
 from datetime import datetime
 from flask import Flask, render_template, request, send_file
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import BooleanObject, NameObject
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import simpleSplit
 
 app = Flask(__name__)
 
@@ -41,15 +45,69 @@ CAMPOS_MAP = {
     "Densidad":         "topmostSubform[0].Page1[0].Densidad[0]",
     "FECHA":            "topmostSubform[0].Page1[0].FECHA[0]",
     "hojas":            "topmostSubform[0].Page2[0].hojas[0]",
-    # Campo chico "Detallar:" al lado del checkbox "Otros"
     "detallar_otros":   "topmostSubform[0].Page1[0].detallar[0]",
 }
 
-LIMITE_H1 = 500  # caracteres para hoja 1, el resto va a hoja 2
+# Configuracion del overlay de descripcion
+X_INICIO     = 54
+Y_INICIO     = 162
+Y_FIN        = 38    # corregido: evita que el texto se pase del borde inferior
+ANCHO        = 488
+FONT_SIZE    = 8
+INTERLINEADO = 10
+X_H2         = 44
+Y_H2_INICIO  = 775
+Y_H2_FIN     = 295   # limite inferior del campo detallar2 en hoja 2
+
+
+def generar_overlay_descripcion(descripcion):
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet, pagesize=A4)
+    can.setFont("Helvetica", FONT_SIZE)
+
+    lineas_todas = []
+    for parrafo in descripcion.split("\n"):
+        if parrafo.strip():
+            lineas_todas.extend(simpleSplit(parrafo, "Helvetica", FONT_SIZE, ANCHO))
+        else:
+            lineas_todas.append("")
+
+    y = Y_INICIO
+    lineas_h1 = []
+    lineas_h2 = []
+
+    for linea in lineas_todas:
+        if y >= Y_FIN:
+            lineas_h1.append((y, linea))
+            y -= INTERLINEADO
+        else:
+            lineas_h2.append(linea)
+
+    # Dibujar hoja 1
+    for (ypos, linea) in lineas_h1:
+        if linea:
+            can.drawString(X_INICIO, ypos, linea)
+
+    can.showPage()
+
+    # Dibujar hoja 2
+    can.setFont("Helvetica", FONT_SIZE)
+    y2 = Y_H2_INICIO
+    for linea in lineas_h2:
+        if y2 >= Y_H2_FIN:
+            if linea:
+                can.drawString(X_H2, y2, linea)
+            y2 -= INTERLINEADO
+
+    can.save()
+    packet.seek(0)
+    return packet
+
 
 @app.route("/")
 def index():
     return render_template("formulario.html")
+
 
 @app.route("/generar-pdf", methods=["POST"])
 def generar_pdf():
@@ -60,7 +118,6 @@ def generar_pdf():
     writer = PdfWriter()
     writer.append(reader)
 
-    # ✅ Forma correcta de setear NeedAppearances en pypdf moderno
     if "/AcroForm" in writer._root_object:
         writer._root_object["/AcroForm"][NameObject("/NeedAppearances")] = BooleanObject(True)
 
@@ -68,13 +125,16 @@ def generar_pdf():
     for campo_web, campo_pdf in CAMPOS_MAP.items():
         datos[campo_pdf] = request.form.get(campo_web, "")
 
-    # ✅ Descripción: detallar[1] = hoja 1, detallar2[0] = hoja 2
-    descripcion = request.form.get("detallar", "").strip()
-    datos["topmostSubform[0].Page1[0].detallar[1]"] = descripcion[:LIMITE_H1]
-    datos["topmostSubform[0].Page2[0].detallar2[0]"] = descripcion[LIMITE_H1:]
-
     for page in writer.pages:
         writer.update_page_form_field_values(page, datos)
+
+    descripcion = request.form.get("detallar", "").strip()
+    if descripcion:
+        overlay_packet = generar_overlay_descripcion(descripcion)
+        overlay = PdfReader(overlay_packet)
+        writer.pages[0].merge_page(overlay.pages[0])
+        if len(writer.pages) > 1 and len(overlay.pages) > 1:
+            writer.pages[1].merge_page(overlay.pages[1])
 
     nombre = f"tasacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     ruta = os.path.join(OUTPUT_DIR, nombre)
@@ -84,6 +144,7 @@ def generar_pdf():
 
     return send_file(ruta, as_attachment=True)
 
+
 if __name__ == "__main__":
-    print("✅ TasadorWeb corriendo en http://localhost:5000")
+    print("TasadorWeb corriendo en http://localhost:5000")
     app.run(debug=True, port=5000)
