@@ -48,16 +48,15 @@ CAMPOS_MAP = {
     "detallar_otros":   "topmostSubform[0].Page1[0].detallar[0]",
 }
 
-# Configuracion del overlay de descripcion
 X_INICIO     = 54
 Y_INICIO     = 162
-Y_FIN        = 38    # corregido: evita que el texto se pase del borde inferior
+Y_FIN        = 38
 ANCHO        = 488
 FONT_SIZE    = 8
 INTERLINEADO = 10
 X_H2         = 44
 Y_H2_INICIO  = 775
-Y_H2_FIN     = 295   # limite inferior del campo detallar2 en hoja 2
+Y_H2_FIN     = 295
 
 
 def generar_overlay_descripcion(descripcion):
@@ -83,14 +82,12 @@ def generar_overlay_descripcion(descripcion):
         else:
             lineas_h2.append(linea)
 
-    # Dibujar hoja 1
     for (ypos, linea) in lineas_h1:
         if linea:
             can.drawString(X_INICIO, ypos, linea)
 
     can.showPage()
 
-    # Dibujar hoja 2
     can.setFont("Helvetica", FONT_SIZE)
     y2 = Y_H2_INICIO
     for linea in lineas_h2:
