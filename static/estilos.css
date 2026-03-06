@@ -184,6 +184,7 @@ main {
 .campo textarea {
   resize: vertical;
   min-height: 80px;
+  max-height: 400px;
   line-height: 1.5;
 }
 

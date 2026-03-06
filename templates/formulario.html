@@ -5,6 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TasadorWeb — Formulario de Tasación</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}"/>
+  <style>
+    .upload-area {
+      border: 2px dashed var(--gris-borde);
+      border-radius: var(--radio);
+      padding: 1.2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: #fafbfc;
+      margin-top: 0.4rem;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--azul-claro);
+      background: #ebf4ff;
+    }
+    .upload-area input[type="file"] { display: none; }
+    .upload-texto { font-size: 0.88rem; color: #718096; margin-top: 0.3rem; }
+    .upload-icono { font-size: 2rem; }
+    #preview-mapa {
+      display: none;
+      margin-top: 0.8rem;
+      position: relative;
+    }
+    #preview-mapa img {
+      width: 100%;
+      max-height: 260px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1.5px solid var(--gris-borde);
+    }
+    #btn-quitar-mapa {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
 </head>
 <body>
 
@@ -19,7 +66,7 @@
   </header>
 
   <main>
-    <form action="/generar-pdf" method="POST" id="formTasacion">
+    <form action="/generar-pdf" method="POST" enctype="multipart/form-data" id="formTasacion">
 
       <input type="hidden" name="pdf_base" value="minutaRobledo.pdf" />
 
@@ -130,6 +177,27 @@
         </div>
       </section>
 
+      <!-- SECCIÓN: CROQUIS / VISTA SATELITAL -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">🗺️</span> Croquis / Vista Satelital
+        </h2>
+        <div class="campo">
+          <label>Imagen del mapa (opcional)</label>
+          <div class="upload-area" id="uploadArea" onclick="document.getElementById('imagen_mapa').click()">
+            <div class="upload-icono">📸</div>
+            <div><strong>Hacé click para subir una imagen</strong></div>
+            <div class="upload-texto">O arrastrá y soltá aquí · JPG, PNG · Máx. 10 MB</div>
+            <input type="file" id="imagen_mapa" name="imagen_mapa"
+                   accept="image/jpeg,image/png,image/webp" />
+          </div>
+          <div id="preview-mapa">
+            <img id="preview-img" src="" alt="Vista previa del mapa" />
+            <button type="button" id="btn-quitar-mapa" title="Quitar imagen">✕</button>
+          </div>
+        </div>
+      </section>
+
       <!-- SECCIÓN 3: DATOS CATASTRALES -->
       <section class="card">
         <h2 class="section-title">
@@ -181,16 +249,16 @@
             <label>Tipo de Inmueble</label>
             <div class="checkboxes">
               <label class="check-label">
-                <input type="checkbox" name="VF" /> Vivienda familiar
+                <input type="checkbox" name="VF" value="1" /> Vivienda familiar
               </label>
               <label class="check-label">
-                <input type="checkbox" name="DC" /> Destino comercial
+                <input type="checkbox" name="DC" value="1" /> Destino comercial
               </label>
               <label class="check-label">
-                <input type="checkbox" name="DI" /> Destino industrial
+                <input type="checkbox" name="DI" value="1" /> Destino industrial
               </label>
               <label class="check-label">
-                <input type="checkbox" name="OT" /> Otros
+                <input type="checkbox" name="OT" value="1" /> Otros
               </label>
             </div>
           </div>
@@ -286,6 +354,7 @@
         document.getElementById("formTasacion").reset();
         document.getElementById("contadorDetallar").textContent = "0 / 6700 caracteres";
         document.getElementById("contadorDetallar").style.color = "#718096";
+        quitarImagenMapa();
       }
     }
 
@@ -298,6 +367,54 @@
         btn.disabled = false;
       }, 4000);
     });
+
+    // ── UPLOAD IMAGEN MAPA ────────────────────────────────────────────────
+    const inputImagen = document.getElementById("imagen_mapa");
+    const previewDiv  = document.getElementById("preview-mapa");
+    const previewImg  = document.getElementById("preview-img");
+    const uploadArea  = document.getElementById("uploadArea");
+
+    inputImagen.addEventListener("change", function () {
+      if (this.files && this.files[0]) mostrarPreview(this.files[0]);
+    });
+
+    uploadArea.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      this.classList.add("drag-over");
+    });
+    uploadArea.addEventListener("dragleave", function () {
+      this.classList.remove("drag-over");
+    });
+    uploadArea.addEventListener("drop", function (e) {
+      e.preventDefault();
+      this.classList.remove("drag-over");
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        inputImagen.files = dt.files;
+        mostrarPreview(file);
+      }
+    });
+
+    function mostrarPreview(file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        previewImg.src = e.target.result;
+        previewDiv.style.display = "block";
+        uploadArea.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function quitarImagenMapa() {
+      previewImg.src = "";
+      previewDiv.style.display = "none";
+      uploadArea.style.display = "block";
+      inputImagen.value = "";
+    }
+
+    document.getElementById("btn-quitar-mapa").addEventListener("click", quitarImagenMapa);
   </script>
 
   <script>

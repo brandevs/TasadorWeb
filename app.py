@@ -7,10 +7,10 @@ import io
 from datetime import datetime
 from flask import Flask, render_template, request, send_file
 from pypdf import PdfReader, PdfWriter
-from pypdf.generic import BooleanObject, NameObject
+from pypdf.generic import BooleanObject, NameObject, NameObject as PDF_Name
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import simpleSplit
+from reportlab.lib.utils import simpleSplit, ImageReader
 
 app = Flask(__name__)
 
@@ -48,6 +48,15 @@ CAMPOS_MAP = {
     "detallar_otros":   "topmostSubform[0].Page1[0].detallar[0]",
 }
 
+# Checkboxes: nombre en el form -> nombre del campo en el PDF
+CHECKBOXES = {
+    "VF": "topmostSubform[0].Page1[0].VF[0]",
+    "DC": "topmostSubform[0].Page1[0].DC[0]",
+    "DI": "topmostSubform[0].Page1[0].DI[0]",
+    "OT": "topmostSubform[0].Page1[0].OT[0]",
+}
+
+# Overlay descripcion
 X_INICIO     = 54
 Y_INICIO     = 162
 Y_FIN        = 38
@@ -57,6 +66,12 @@ INTERLINEADO = 10
 X_H2         = 44
 Y_H2_INICIO  = 775
 Y_H2_FIN     = 295
+
+# Coordenadas grilla croquis
+MAPA_X      = 120
+MAPA_Y      = 468
+MAPA_ANCHO  = 350
+MAPA_ALTO   = 108
 
 
 def generar_overlay_descripcion(descripcion):
@@ -101,6 +116,78 @@ def generar_overlay_descripcion(descripcion):
     return packet
 
 
+def generar_overlay_mapa(img_bytes):
+    """
+    Escala la imagen para que entre completa dentro de la grilla
+    manteniendo proporciones (contain), con fondo blanco si sobra espacio.
+    """
+    from PIL import Image
+
+    # Tamaño del canvas en pixeles a 150 dpi
+    px_ancho = int(MAPA_ANCHO * 150 / 72)
+    px_alto  = int(MAPA_ALTO  * 150 / 72)
+
+    # Abrir imagen original
+    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    img_w, img_h = img.size
+
+    # Escalar manteniendo proporcion para que entre completa (contain)
+    escala = min(px_ancho / img_w, px_alto / img_h)
+    nuevo_ancho = int(img_w * escala)
+    nuevo_alto  = int(img_h * escala)
+    img = img.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
+
+    # Crear canvas blanco y pegar la imagen centrada
+    canvas_img = Image.new("RGB", (px_ancho, px_alto), (255, 255, 255))
+    offset_x = (px_ancho - nuevo_ancho) // 2
+    offset_y = (px_alto  - nuevo_alto)  // 2
+    canvas_img.paste(img, (offset_x, offset_y))
+
+    # Guardar como PNG en memoria
+    buf = io.BytesIO()
+    canvas_img.save(buf, format="PNG")
+    buf.seek(0)
+
+    # Insertar en el canvas PDF
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet, pagesize=A4)
+    img_reader = ImageReader(buf)
+    can.drawImage(
+        img_reader,
+        MAPA_X, MAPA_Y,
+        width=MAPA_ANCHO, height=MAPA_ALTO,
+        preserveAspectRatio=False,
+    )
+    can.save()
+    packet.seek(0)
+    return packet
+
+
+def marcar_checkboxes(writer, checkboxes_marcados):
+    """
+    Marca o desmarca los checkboxes en el PDF.
+    checkboxes_marcados: set con los nombres de los campos marcados (ej: {"VF", "DC"})
+    """
+    from pypdf.generic import NameObject as N
+
+    for page in writer.pages:
+        if "/Annots" not in page:
+            continue
+        for annot_ref in page["/Annots"]:
+            annot = annot_ref.get_object()
+            campo = str(annot.get("/T", ""))
+            # Buscar si este campo es uno de los checkboxes
+            for nombre_form, nombre_pdf_suffix in CHECKBOXES.items():
+                # El campo en el PDF se llama "VF[0]", "DC[0]", etc.
+                if campo == f"{nombre_form}[0]":
+                    if nombre_form in checkboxes_marcados:
+                        annot[N("/V")]  = N("/1")
+                        annot[N("/AS")] = N("/1")
+                    else:
+                        annot[N("/V")]  = N("/Off")
+                        annot[N("/AS")] = N("/Off")
+
+
 @app.route("/")
 def index():
     return render_template("formulario.html")
@@ -118,6 +205,7 @@ def generar_pdf():
     if "/AcroForm" in writer._root_object:
         writer._root_object["/AcroForm"][NameObject("/NeedAppearances")] = BooleanObject(True)
 
+    # Campos de texto
     datos = {}
     for campo_web, campo_pdf in CAMPOS_MAP.items():
         datos[campo_pdf] = request.form.get(campo_web, "")
@@ -125,6 +213,14 @@ def generar_pdf():
     for page in writer.pages:
         writer.update_page_form_field_values(page, datos)
 
+    # Checkboxes
+    checkboxes_marcados = set()
+    for nombre in CHECKBOXES:
+        if request.form.get(nombre):
+            checkboxes_marcados.add(nombre)
+    marcar_checkboxes(writer, checkboxes_marcados)
+
+    # Overlay descripcion
     descripcion = request.form.get("detallar", "").strip()
     if descripcion:
         overlay_packet = generar_overlay_descripcion(descripcion)
@@ -132,6 +228,17 @@ def generar_pdf():
         writer.pages[0].merge_page(overlay.pages[0])
         if len(writer.pages) > 1 and len(overlay.pages) > 1:
             writer.pages[1].merge_page(overlay.pages[1])
+
+    # Overlay imagen del mapa
+    imagen_mapa = request.files.get("imagen_mapa")
+    if imagen_mapa and imagen_mapa.filename:
+        try:
+            img_bytes = imagen_mapa.read()
+            mapa_packet = generar_overlay_mapa(img_bytes)
+            mapa_overlay = PdfReader(mapa_packet)
+            writer.pages[0].merge_page(mapa_overlay.pages[0])
+        except Exception as e:
+            print(f"Error insertando imagen del mapa: {e}")
 
     nombre = f"tasacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     ruta = os.path.join(OUTPUT_DIR, nombre)
