@@ -4,53 +4,381 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TasadorWeb — Formulario de Tasación</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}"/>
   <style>
+    :root {
+      --navy:       #0f1923;
+      --navy-mid:   #1a2636;
+      --navy-light: #243447;
+      --gold:       #c9952a;
+      --gold-light: #e8b84b;
+      --gold-pale:  #f5e6c3;
+      --cream:      #faf7f2;
+      --text:       #1a1a2e;
+      --muted:      #6b7280;
+      --border:     #ddd5c4;
+      --success:    #2d6a4f;
+      --danger:     #c0392b;
+      --radius:     6px;
+      --shadow:     0 2px 8px rgba(0,0,0,0.08);
+      --shadow-lg:  0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 0% 0%, #1e2f45 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, #16212f 0%, transparent 50%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--navy-mid);
+      border-bottom: 2px solid var(--gold);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-logo {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(201,149,42,0.4);
+    }
+
+    .header-titles h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2.5px;
+      color: #fff;
+      line-height: 1;
+    }
+    .header-titles p {
+      font-size: 11px;
+      color: var(--gold-light);
+      letter-spacing: 1px;
+      margin-top: 3px;
+      font-weight: 300;
+    }
+
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ── STATUS BAR ── */
+    .borrador-bar {
+      background: var(--navy-light);
+      border: 1px solid rgba(201,149,42,0.2);
+      border-radius: 8px;
+      padding: 11px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
+    .borrador-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4a5568;
+      flex-shrink: 0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .borrador-dot.guardado  { background: #48bb78; box-shadow: 0 0 6px rgba(72,187,120,0.5); }
+    .borrador-dot.modificado{ background: var(--gold); box-shadow: 0 0 6px rgba(201,149,42,0.5); }
+
+    #borradorEstado { color: #e2e8f0; font-weight: 500; font-size: 12px; }
+
+    .progress-wrap { margin-left: auto; text-align: right; }
+    .progress-bar {
+      height: 3px;
+      width: 150px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    #progressLabel { font-size: 10px; color: #718096; margin-top: 3px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--cream);
+      border-radius: 10px;
+      padding: 26px 30px;
+      margin-bottom: 18px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.4s ease both;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card:nth-child(1){ animation-delay:.05s }
+    .card:nth-child(2){ animation-delay:.10s }
+    .card:nth-child(3){ animation-delay:.15s }
+    .card:nth-child(4){ animation-delay:.20s }
+    .card:nth-child(5){ animation-delay:.25s }
+    .card:nth-child(6){ animation-delay:.30s }
+    .card:nth-child(7){ animation-delay:.35s }
+    .card:nth-child(8){ animation-delay:.40s }
+    .card:nth-child(9){ animation-delay:.45s }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 2.5px;
+      color: var(--navy);
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+
+    /* ── GRID ── */
+    .grid { display: grid; gap: 14px; }
+    .grid-1 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 600px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .header-actions { width: 100%; }
+    }
+
+    /* ── CAMPOS ── */
+    .campo { display: flex; flex-direction: column; gap: 5px; }
+
+    label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,149,42,0.14);
+    }
+    input::placeholder, textarea::placeholder { color: #b0a898; }
+    textarea { resize: vertical; line-height: 1.65; }
+
+    /* ── CHECKBOXES ── */
+    .checkboxes {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      padding: 8px 0 2px;
+    }
+    .check-label {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 13px; font-weight: 400;
+      color: var(--text);
+      text-transform: none; letter-spacing: 0;
+      cursor: pointer;
+      padding: 6px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: #fff;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .check-label:has(input:checked) {
+      border-color: var(--gold);
+      background: var(--gold-pale);
+      color: #7a4b00;
+    }
+    .check-label input[type="checkbox"] {
+      width: 14px; height: 14px;
+      accent-color: var(--gold);
+    }
+
+    /* ── CONTADOR ── */
+    .contador {
+      font-size: 11px; color: var(--muted);
+      text-align: right; margin-top: 3px;
+    }
+
+    /* ── UPLOAD ── */
     .upload-area {
-      border: 2px dashed var(--gris-borde);
-      border-radius: var(--radio);
-      padding: 1.2rem;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 22px 16px;
       text-align: center;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
-      background: #fafbfc;
-      margin-top: 0.4rem;
+      background: #fff;
+      margin-top: 6px;
     }
     .upload-area:hover, .upload-area.drag-over {
-      border-color: var(--azul-claro);
-      background: #ebf4ff;
+      border-color: var(--gold);
+      background: #fffbf2;
     }
     .upload-area input[type="file"] { display: none; }
-    .upload-texto { font-size: 0.88rem; color: #718096; margin-top: 0.3rem; }
-    .upload-icono { font-size: 2rem; }
-    #preview-mapa {
-      display: none;
-      margin-top: 0.8rem;
-      position: relative;
-    }
+    .upload-icono { font-size: 1.8rem; margin-bottom: 5px; }
+    .upload-texto { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    #preview-mapa { display: none; margin-top: 10px; position: relative; }
     #preview-mapa img {
-      width: 100%;
-      max-height: 260px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1.5px solid var(--gris-borde);
+      width: 100%; max-height: 240px;
+      object-fit: contain;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
     }
     #btn-quitar-mapa {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      background: rgba(0,0,0,0.55);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 26px;
-      height: 26px;
-      font-size: 0.85rem;
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.6); color: white;
+      border: none; border-radius: 50%;
+      width: 28px; height: 28px; font-size: 13px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
     }
+    #btn-quitar-mapa:hover { background: rgba(192,57,43,0.85); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 17px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      border-radius: var(--radius);
+      border: none; cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-principal {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      color: #1a1000; font-weight: 600;
+      box-shadow: 0 3px 12px rgba(201,149,42,0.35);
+    }
+    .btn-principal:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(201,149,42,0.45);
+    }
+    .btn-principal:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secundario {
+      background: rgba(255,255,255,0.09);
+      color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .btn-secundario:hover {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(255,255,255,0.32);
+    }
+    .btn-danger {
+      background: transparent; color: #fc8181;
+      border: 1px solid rgba(252,129,129,0.28);
+    }
+    .btn-danger:hover {
+      background: rgba(192,57,43,0.14);
+      border-color: #fc8181;
+    }
+    label.btn { cursor: pointer; }
+
+    .acciones {
+      display: flex; gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      padding-top: 6px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 22px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.25);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* ── TOAST ── */
+    #toast-global {
+      position: fixed;
+      bottom: 26px; right: 26px;
+      padding: 11px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.28s, transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+      max-width: 340px;
+    }
+    #toast-global.show { opacity: 1; transform: translateY(0); }
+    #toast-global.success { background: #2d6a4f; color: #fff; }
+    #toast-global.info    { background: var(--navy-mid); color: #e2e8f0; border: 1px solid var(--gold); }
+    #toast-global.error   { background: #c0392b; color: #fff; }
   </style>
 </head>
 <body>
@@ -58,195 +386,191 @@
   <header>
     <div class="header-inner">
       <div class="header-logo">⚖️</div>
-      <div>
+      <div class="header-titles">
         <h1>Sistema de Tasación Inmobiliaria</h1>
-        <p class="header-sub">Horacio Walter Robledo - Leg.37735</p>
+        <p>Horacio Walter Robledo · Leg. 37735</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn btn-secundario" onclick="guardarBorrador()">
+          💾 Guardar borrador
+        </button>
+        <label class="btn btn-secundario">
+          📂 Cargar borrador
+          <input type="file" id="inputBorrador" accept=".json" style="display:none"
+                 onchange="cargarBorrador(event)" />
+        </label>
+        <button type="button" class="btn btn-danger" onclick="limpiarFormulario()">
+          🗑 Limpiar
+        </button>
       </div>
     </div>
   </header>
 
   <main>
+
+    <!-- STATUS BAR -->
+    <div class="borrador-bar">
+      <span class="borrador-dot" id="borradorDot"></span>
+      <span id="borradorEstado">Sin cambios</span>
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+        <div id="progressLabel">0 / 0 campos completados</div>
+      </div>
+    </div>
+
     <form action="/generar-pdf" method="POST" enctype="multipart/form-data" id="formTasacion">
 
       <input type="hidden" name="pdf_base" value="minutaRobledo.pdf" />
 
-      <!-- SECCIÓN 1: DATOS DEL PROFESIONAL -->
+      <!-- ENCABEZADO -->
       <section class="card">
         <h2 class="section-title">
-          <span class="section-icon">👤</span> Datos del Profesional
+          <span class="section-icon">📅</span> Encabezado
         </h2>
         <div class="grid grid-2">
-
-          <div class="campo">
-            <label for="ApellidoYNombre">Apellido y Nombre</label>
-            <input type="text" id="ApellidoYNombre" name="ApellidoYNombre"
-                   placeholder="Ej: Robledo, Horacio Walter" />
-          </div>
-
-          <div class="campo">
-            <label for="matricula">Matrícula</label>
-            <input type="text" id="matricula" name="matricula"
-                   placeholder="Ej: 37735" />
-          </div>
-
-          <div class="campo">
-            <label for="Documento">Documento (DNI / CUIT)</label>
-            <input type="text" id="Documento" name="Documento"
-                   placeholder="Ej: 23-20555543-9" />
-          </div>
-
           <div class="campo">
             <label for="FECHA">Fecha</label>
             <input type="date" id="FECHA" name="FECHA" />
           </div>
-
           <div class="campo">
             <label for="hojas">N° de Hojas</label>
-            <input type="text" id="hojas" name="hojas" placeholder="Ej: 3" />
+            <input type="text" id="hojas" name="hojas" placeholder="Ej: 2" />
           </div>
-
         </div>
       </section>
 
-      <!-- SECCIÓN 2: DATOS DEL TITULAR -->
+      <!-- SOLICITANTE -->
       <section class="card">
         <h2 class="section-title">
-          <span class="section-icon">🏠</span> Datos del Titular / Inmueble
+          <span class="section-icon">👤</span> Solicitante
         </h2>
         <div class="grid grid-2">
-
           <div class="campo">
-            <label for="titular">Titular</label>
-            <input type="text" id="titular" name="titular"
-                   placeholder="Nombre del propietario" />
+            <label for="ApellidoYNombre">Apellido y Nombre</label>
+            <input type="text" id="ApellidoYNombre" name="ApellidoYNombre"
+                   placeholder="Ej: Popovich, Carmen" />
           </div>
-
+          <div class="campo">
+            <label for="Documento">DNI / CUIT</label>
+            <input type="text" id="Documento" name="Documento"
+                   placeholder="Ej: 11.031.431" />
+          </div>
           <div class="campo">
             <label for="domicilio">Domicilio</label>
             <input type="text" id="domicilio" name="domicilio"
                    placeholder="Dirección completa" />
           </div>
-
           <div class="campo">
-            <label for="calle">Calle</label>
-            <input type="text" id="calle" name="calle"
-                   placeholder="Nombre de la calle" />
+            <label for="caracter">Carácter</label>
+            <input type="text" id="caracter" name="caracter"
+                   placeholder="Ej: Propietario / Comprador" />
           </div>
+        </div>
+      </section>
 
-          <div class="campo">
-            <label for="nro">Número</label>
-            <input type="text" id="nro" name="nro" placeholder="Ej: 1234" />
-          </div>
-
-          <div class="campo">
-            <label for="entreCalles">Entre Calles</label>
-            <input type="text" id="entreCalles" name="entreCalles"
-                   placeholder="Ej: Rivadavia y San Martín" />
-          </div>
-
-          <div class="campo">
-            <label for="paraje">Paraje / Barrio</label>
-            <input type="text" id="paraje" name="paraje"
-                   placeholder="Ej: Barrio Norte" />
-          </div>
-
+      <!-- UBICACIÓN -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">📍</span> Ubicación del Inmueble a Tasar
+        </h2>
+        <div class="grid grid-2">
           <div class="campo">
             <label for="localidad">Localidad</label>
             <input type="text" id="localidad" name="localidad"
                    placeholder="Ej: Mar del Plata" />
           </div>
-
+          <div class="campo">
+            <label for="paraje">Paraje / Barrio</label>
+            <input type="text" id="paraje" name="paraje"
+                   placeholder="Ej: Barrio Parque Peña" />
+          </div>
           <div class="campo">
             <label for="partido">Partido</label>
             <input type="text" id="partido" name="partido"
                    placeholder="Ej: General Pueyrredón" />
           </div>
-
           <div class="campo">
             <label for="provincia">Provincia</label>
             <input type="text" id="provincia" name="provincia"
                    placeholder="Ej: Buenos Aires" />
           </div>
-
           <div class="campo">
-            <label for="partida">Partida</label>
-            <input type="text" id="partida" name="partida"
-                   placeholder="N° de partida inmobiliaria" />
+            <label for="calle">Calle</label>
+            <input type="text" id="calle" name="calle"
+                   placeholder="Nombre de la calle" />
           </div>
-
+          <div class="campo">
+            <label for="nro">Número</label>
+            <input type="text" id="nro" name="nro" placeholder="Ej: 6085" />
+          </div>
+          <div class="campo" style="grid-column: 1 / -1">
+            <label for="entreCalles">Entre las calles</label>
+            <input type="text" id="entreCalles" name="entreCalles"
+                   placeholder="Ej: Rivadavia y San Martín" />
+          </div>
         </div>
-      </section>
 
-      <!-- SECCIÓN: CROQUIS / VISTA SATELITAL -->
-      <section class="card">
-        <h2 class="section-title">
-          <span class="section-icon">🗺️</span> Croquis / Vista Satelital
-        </h2>
-        <div class="campo">
-          <label>Imagen del mapa (opcional)</label>
-          <div class="upload-area" id="uploadArea" onclick="document.getElementById('imagen_mapa').click()">
+        <!-- CROQUIS -->
+        <div style="margin-top:18px">
+          <label style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">
+            🗺️ Croquis / Vista Satelital <span style="font-weight:300;text-transform:none;letter-spacing:0">(opcional)</span>
+          </label>
+          <div class="upload-area" id="uploadArea"
+               onclick="document.getElementById('imagen_mapa').click()">
             <div class="upload-icono">📸</div>
-            <div><strong>Hacé click para subir una imagen</strong></div>
-            <div class="upload-texto">O arrastrá y soltá aquí · JPG, PNG · Máx. 10 MB</div>
+            <div style="font-size:13px;font-weight:600;color:#4a5568">
+              Hacé click para subir una imagen
+            </div>
+            <div class="upload-texto">O arrastrá y soltá · JPG, PNG · Máx. 10 MB</div>
             <input type="file" id="imagen_mapa" name="imagen_mapa"
                    accept="image/jpeg,image/png,image/webp" />
           </div>
           <div id="preview-mapa">
-            <img id="preview-img" src="" alt="Vista previa del mapa" />
+            <img id="preview-img" src="" alt="Vista previa" />
             <button type="button" id="btn-quitar-mapa" title="Quitar imagen">✕</button>
           </div>
         </div>
       </section>
 
-      <!-- SECCIÓN 3: DATOS CATASTRALES -->
+      <!-- IDENTIFICACIÓN -->
       <section class="card">
         <h2 class="section-title">
-          <span class="section-icon">📐</span> Datos Catastrales y del Lote
+          <span class="section-icon">📋</span> Identificación Registral
         </h2>
         <div class="grid grid-2">
-
           <div class="campo">
             <label for="Nomenclatura">Nomenclatura Catastral</label>
             <input type="text" id="Nomenclatura" name="Nomenclatura"
-                  placeholder="Ej: Circ. I — Secc. A — Mz. 123 — P. 4" />
+                   placeholder="Circ. II — Secc. H — Mz. 124 — P. 17" />
           </div>
-
           <div class="campo">
-            <label for="medidaLote">Medida del Lote (m²)</label>
-            <input type="text" id="medidaLote" name="medidaLote"
-                  placeholder="Ej: 300" />
+            <label for="partida">Partida</label>
+            <input type="text" id="partida" name="partida"
+                   placeholder="Ej: 45-228974" />
           </div>
-
           <div class="campo">
-            <label for="usoSuelo">Uso del Suelo</label>
-            <input type="text" id="usoSuelo" name="usoSuelo"
-                  placeholder="Ej: Residencial" />
+            <label for="matricula">Matrícula</label>
+            <input type="text" id="matricula" name="matricula"
+                   placeholder="Ej: 37735" />
           </div>
-
           <div class="campo">
-            <label for="caracter">Carácter</label>
-            <input type="text" id="caracter" name="caracter"
-                  placeholder="Ej: Urbano / Rural" />
+            <label for="titular">Titular Registral</label>
+            <input type="text" id="titular" name="titular"
+                   placeholder="Nombre del propietario" />
           </div>
+        </div>
+      </section>
 
+      <!-- TIPO DE INMUEBLE -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">🏠</span> Tipo de Inmueble
+        </h2>
+        <div class="grid grid-2">
           <div class="campo">
-            <label for="Densidad">Densidad</label>
-            <input type="text" id="Densidad" name="Densidad"
-                  placeholder="Ej: Alta / Media / Baja" />
-          </div>
-
-          <div class="campo">
-            <label for="Fos">FOS</label>
-            <input type="text" id="Fos" name="Fos" placeholder="Ej: 0.6" />
-          </div>
-
-          <div class="campo">
-            <label for="Fot">FOT</label>
-            <input type="text" id="Fot" name="Fot" placeholder="Ej: 1.2" />
-          </div>
-
-          <div class="campo">
-            <label>Tipo de Inmueble</label>
+            <label>Destino</label>
             <div class="checkboxes">
               <label class="check-label">
                 <input type="checkbox" name="VF" value="1" /> Vivienda familiar
@@ -262,67 +586,86 @@
               </label>
             </div>
           </div>
-
           <div class="campo">
             <label for="detallar_otros">Detallar (si marcó "Otros")</label>
             <input type="text" id="detallar_otros" name="detallar_otros"
-                   placeholder="Especificá el tipo de inmueble" />
+                   placeholder="Especificá el tipo" />
           </div>
-
         </div>
       </section>
 
-      <!-- SECCIÓN 4: SUPERFICIES -->
+      <!-- MEDIDAS -->
       <section class="card">
         <h2 class="section-title">
-          <span class="section-icon">📏</span> Superficies Construidas
+          <span class="section-icon">📏</span> Medidas y Superficie
         </h2>
-        <div class="grid grid-2">
-
+        <div class="grid grid-3">
+          <div class="campo">
+            <label for="medidaLote">Medidas del Lote</label>
+            <input type="text" id="medidaLote" name="medidaLote"
+                   placeholder="Ej: 15 x 30 = 450 m²" />
+          </div>
           <div class="campo">
             <label for="SupCubierta">Sup. Cubierta (m²)</label>
             <input type="number" step="0.01" id="SupCubierta" name="SupCubierta"
-                   placeholder="Ej: 120.50" />
+                   placeholder="Ej: 50.85" />
           </div>
-
           <div class="campo">
             <label for="SupSemiCubierta">Sup. Semi-Cubierta (m²)</label>
             <input type="number" step="0.01" id="SupSemiCubierta" name="SupSemiCubierta"
-                   placeholder="Ej: 30.00" />
+                   placeholder="Ej: 6.17" />
           </div>
-
         </div>
       </section>
 
-      <!-- SECCIÓN 5: VALUACIÓN -->
+      <!-- INDICADORES URBANÍSTICOS -->
       <section class="card">
         <h2 class="section-title">
-          <span class="section-icon">💰</span> Valuación
+          <span class="section-icon">📐</span> Indicadores Urbanísticos
         </h2>
         <div class="grid grid-2">
-
           <div class="campo">
-            <label for="VF">Valor Fiscal ($)</label>
-            <input type="text" id="VF" name="VF" placeholder="Ej: 5.000.000" />
+            <label for="Fos">FOS</label>
+            <input type="text" id="Fos" name="Fos" placeholder="Ej: 0.6" />
           </div>
-
           <div class="campo">
-            <label for="ValorMercado">Valor de Mercado ($)</label>
-            <input type="text" id="ValorMercado" name="ValorMercado"
-                   placeholder="Ej: 12.000.000" />
+            <label for="Fot">FOT</label>
+            <input type="text" id="Fot" name="Fot" placeholder="Ej: 1.2" />
           </div>
-
+          <div class="campo">
+            <label for="Densidad">Densidad</label>
+            <input type="text" id="Densidad" name="Densidad"
+                   placeholder="Ej: Alta / Media / Baja" />
+          </div>
+          <div class="campo">
+            <label for="usoSuelo">Usos del Suelo</label>
+            <input type="text" id="usoSuelo" name="usoSuelo"
+                   placeholder="Ej: Residencial" />
+          </div>
         </div>
       </section>
 
-      <!-- SECCIÓN 6: OBSERVACIONES -->
+      <!-- VALUACIÓN -->
       <section class="card">
         <h2 class="section-title">
-          <span class="section-icon">📝</span> Observaciones
+          <span class="section-icon">💰</span> Valor de Mercado
+        </h2>
+        <div class="grid grid-2">
+          <div class="campo">
+            <label for="ValorMercado">Valor de Mercado (USD)</label>
+            <input type="text" id="ValorMercado" name="ValorMercado"
+                   placeholder="Ej: 61.254" />
+          </div>
+        </div>
+      </section>
+
+      <!-- DESCRIPCIÓN -->
+      <section class="card">
+        <h2 class="section-title">
+          <span class="section-icon">📝</span> Descripción — Comentarios
         </h2>
         <div class="grid grid-1">
           <div class="campo">
-            <label for="detallar">Observaciones</label>
             <textarea id="detallar" name="detallar" rows="10"
                       maxlength="6700"
                       placeholder="Escribí todas las observaciones aquí. Si superan el espacio de la primera hoja, el texto continuará automáticamente en la segunda."></textarea>
@@ -331,12 +674,9 @@
         </div>
       </section>
 
-      <!-- BOTONES -->
+      <!-- ACCIONES -->
       <div class="acciones">
-        <button type="button" class="btn btn-secundario" onclick="limpiarFormulario()">
-          🗑️ Limpiar formulario
-        </button>
-        <button type="submit" class="btn btn-principal">
+        <button type="submit" class="btn btn-principal" id="btnGenerar">
           📄 Generar y Descargar PDF
         </button>
       </div>
@@ -348,27 +688,146 @@
     <p>Horacio Robledo © 2026 — Sistema exclusivo para uso profesional</p>
   </footer>
 
+  <div id="toast-global"></div>
+
   <script>
-    function limpiarFormulario() {
-      if (confirm("¿Deseas limpiar todos los campos para una nueva tasación?")) {
-        document.getElementById("formTasacion").reset();
-        document.getElementById("contadorDetallar").textContent = "0 / 6700 caracteres";
-        document.getElementById("contadorDetallar").style.color = "#718096";
-        quitarImagenMapa();
-      }
+    // ── TOAST ──────────────────────────────────────────────────────────────
+    function toast(msg, tipo = "success") {
+      const t = document.getElementById("toast-global");
+      t.textContent = msg;
+      t.className = "show " + tipo;
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.className = ""; }, 3200);
     }
 
+    // ── PROGRESS ───────────────────────────────────────────────────────────
+    const CAMPOS_PROGRESO = [
+      "FECHA","hojas","ApellidoYNombre","Documento","domicilio",
+      "localidad","partido","calle","nro","Nomenclatura",
+      "partida","titular","medidaLote","SupCubierta","ValorMercado","detallar"
+    ];
+
+    function actualizarProgreso() {
+      const total = CAMPOS_PROGRESO.length;
+      let ok = 0;
+      CAMPOS_PROGRESO.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.value.trim() !== "") ok++;
+      });
+      const pct = Math.round((ok / total) * 100);
+      document.getElementById("progressFill").style.width = pct + "%";
+      document.getElementById("progressLabel").textContent =
+        ok + " / " + total + " campos completados";
+    }
+
+    // ── ESTADO BORRADOR ────────────────────────────────────────────────────
+    let _modificado = false;
+
+    function marcarModificado() {
+      if (!_modificado) {
+        _modificado = true;
+        document.getElementById("borradorDot").className = "borrador-dot modificado";
+        document.getElementById("borradorEstado").textContent = "Cambios sin guardar";
+      }
+      actualizarProgreso();
+    }
+
+    function marcarGuardado(fecha) {
+      _modificado = false;
+      document.getElementById("borradorDot").className = "borrador-dot guardado";
+      document.getElementById("borradorEstado").textContent =
+        "Guardado" + (fecha ? " · " + fecha : "");
+    }
+
+    document.getElementById("formTasacion").addEventListener("input",  marcarModificado);
+    document.getElementById("formTasacion").addEventListener("change", marcarModificado);
+
+    // ── GUARDAR BORRADOR ───────────────────────────────────────────────────
+    function guardarBorrador() {
+      const form = document.getElementById("formTasacion");
+      const data = { _version: 1 };
+
+      form.querySelectorAll("input[name], textarea[name]").forEach(el => {
+        if (el.type === "file") return;
+        data[el.name] = el.type === "checkbox" ? el.checked : el.value;
+      });
+
+      const ahora = new Date();
+      data._guardado_en = ahora.toLocaleString("es-AR");
+
+      const nombre = "borrador_tasacion_" + ahora.toISOString().slice(0,10) + ".json";
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = nombre;
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+      marcarGuardado(data._guardado_en);
+      toast("✓ Borrador guardado como " + nombre);
+    }
+
+    // ── CARGAR BORRADOR ────────────────────────────────────────────────────
+    function cargarBorrador(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        let data;
+        try { data = JSON.parse(e.target.result); }
+        catch { toast("⚠ Archivo inválido", "error"); return; }
+
+        const form = document.getElementById("formTasacion");
+        form.querySelectorAll("input[name], textarea[name]").forEach(el => {
+          if (el.type === "file" || !(el.name in data)) return;
+          if (el.type === "checkbox") {
+            el.checked = !!data[el.name];
+          } else {
+            el.value = data[el.name];
+          }
+        });
+
+        // Actualizar contador
+        const ta  = document.getElementById("detallar");
+        const ctr = document.getElementById("contadorDetallar");
+        ctr.textContent = ta.value.length + " / 6700 caracteres";
+        ctr.style.color = ta.value.length > 6030 ? "#e53e3e" : "#718096";
+
+        actualizarProgreso();
+        marcarGuardado(data._guardado_en || "");
+        toast(
+          "✓ Borrador cargado" + (data._guardado_en ? " · " + data._guardado_en : ""),
+          "info"
+        );
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    // ── LIMPIAR ────────────────────────────────────────────────────────────
+    function limpiarFormulario() {
+      if (!confirm("¿Limpiar todos los campos para una nueva tasación?")) return;
+      document.getElementById("formTasacion").reset();
+      document.getElementById("contadorDetallar").textContent = "0 / 6700 caracteres";
+      document.getElementById("contadorDetallar").style.color = "#718096";
+      quitarImagenMapa();
+      _modificado = false;
+      document.getElementById("borradorDot").className = "borrador-dot";
+      document.getElementById("borradorEstado").textContent = "Sin cambios";
+      actualizarProgreso();
+      toast("Formulario limpiado", "info");
+    }
+
+    // ── SUBMIT ─────────────────────────────────────────────────────────────
     document.getElementById("formTasacion").addEventListener("submit", function () {
-      const btn = this.querySelector(".btn-principal");
+      const btn = document.getElementById("btnGenerar");
       btn.textContent = "⏳ Generando PDF...";
       btn.disabled = true;
-      setTimeout(() => {
-        btn.textContent = "📄 Generar y Descargar PDF";
-        btn.disabled = false;
-      }, 4000);
+      setTimeout(() => { btn.innerHTML = "📄 Generar y Descargar PDF"; btn.disabled = false; }, 5000);
     });
 
-    // ── UPLOAD IMAGEN MAPA ────────────────────────────────────────────────
+    // ── UPLOAD IMAGEN ──────────────────────────────────────────────────────
     const inputImagen = document.getElementById("imagen_mapa");
     const previewDiv  = document.getElementById("preview-mapa");
     const previewImg  = document.getElementById("preview-img");
@@ -377,17 +836,11 @@
     inputImagen.addEventListener("change", function () {
       if (this.files && this.files[0]) mostrarPreview(this.files[0]);
     });
-
-    uploadArea.addEventListener("dragover", function (e) {
+    uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.classList.add("drag-over"); });
+    uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("drag-over"));
+    uploadArea.addEventListener("drop", e => {
       e.preventDefault();
-      this.classList.add("drag-over");
-    });
-    uploadArea.addEventListener("dragleave", function () {
-      this.classList.remove("drag-over");
-    });
-    uploadArea.addEventListener("drop", function (e) {
-      e.preventDefault();
-      this.classList.remove("drag-over");
+      uploadArea.classList.remove("drag-over");
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith("image/")) {
         const dt = new DataTransfer();
@@ -399,7 +852,7 @@
 
     function mostrarPreview(file) {
       const reader = new FileReader();
-      reader.onload = function (e) {
+      reader.onload = e => {
         previewImg.src = e.target.result;
         previewDiv.style.display = "block";
         uploadArea.style.display = "none";
@@ -415,18 +868,25 @@
     }
 
     document.getElementById("btn-quitar-mapa").addEventListener("click", quitarImagenMapa);
-  </script>
 
-  <script>
-    const textarea = document.getElementById("detallar");
-    const contador = document.getElementById("contadorDetallar");
-    const MAX = 6700;
-
-    textarea.addEventListener("input", function () {
-      const largo = this.value.length;
-      contador.textContent = `${largo} / ${MAX} caracteres`;
-      contador.style.color = largo > MAX * 0.9 ? "#e53e3e" : "#718096";
+    // ── CONTADOR TEXTAREA ──────────────────────────────────────────────────
+    document.getElementById("detallar").addEventListener("input", function () {
+      const n = this.value.length;
+      const ctr = document.getElementById("contadorDetallar");
+      ctr.textContent = n + " / 6700 caracteres";
+      ctr.style.color = n > 6030 ? "#e53e3e" : "#718096";
     });
+
+    // ── CTRL+S ─────────────────────────────────────────────────────────────
+    document.addEventListener("keydown", e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        guardarBorrador();
+      }
+    });
+
+    // Init
+    actualizarProgreso();
   </script>
 
 </body>
