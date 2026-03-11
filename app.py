@@ -81,6 +81,7 @@ def generar_overlay_descripcion(descripcion):
 
     lineas_todas = []
     for parrafo in descripcion.split("\n"):
+        parrafo = parrafo.strip()
         if parrafo.strip():
             lineas_todas.extend(simpleSplit(parrafo, "Helvetica", FONT_SIZE, ANCHO))
         else:
