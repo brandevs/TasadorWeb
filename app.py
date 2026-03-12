@@ -16,6 +16,7 @@ app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PDF_BASE = os.path.join(BASE_DIR, "minutaRobledo.pdf")
+FIRMA_IMG = os.path.join(BASE_DIR, "firma.png")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output", "tasaciones_generadas")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -48,7 +49,6 @@ CAMPOS_MAP = {
     "detallar_otros":   "topmostSubform[0].Page1[0].detallar[0]",
 }
 
-# Checkboxes: nombre en el form -> nombre del campo en el PDF
 CHECKBOXES = {
     "VF": "topmostSubform[0].Page1[0].VF[0]",
     "DC": "topmostSubform[0].Page1[0].DC[0]",
@@ -57,10 +57,10 @@ CHECKBOXES = {
 }
 
 # Overlay descripcion
-X_INICIO     = 54
+X_INICIO     = 46
 Y_INICIO     = 162
 Y_FIN        = 38
-ANCHO        = 488
+ANCHO        = 500
 FONT_SIZE    = 8
 INTERLINEADO = 10
 X_H2         = 44
@@ -73,6 +73,16 @@ MAPA_Y      = 468
 MAPA_ANCHO  = 350
 MAPA_ALTO   = 108
 
+# Coordenadas firma (pagina 2)
+H_PAGE        = 841.89
+Y_FIRMA_LABEL = H_PAGE - 711.6
+Y_CUIT_LABEL  = H_PAGE - 740.3
+Y_DOM_LABEL   = H_PAGE - 770.6
+
+PROFESIONAL_NOMBRE = "Horacio Walter Robledo - Leg. 37735"
+PROFESIONAL_CUIT   = "23-20555543-9"
+PROFESIONAL_DOM    = "Espana N° 4237 - Mar del Plata"
+
 
 def generar_overlay_descripcion(descripcion):
     packet = io.BytesIO()
@@ -82,7 +92,7 @@ def generar_overlay_descripcion(descripcion):
     lineas_todas = []
     for parrafo in descripcion.split("\n"):
         parrafo = parrafo.strip()
-        if parrafo.strip():
+        if parrafo:
             lineas_todas.extend(simpleSplit(parrafo, "Helvetica", FONT_SIZE, ANCHO))
         else:
             lineas_todas.append("")
@@ -118,38 +128,28 @@ def generar_overlay_descripcion(descripcion):
 
 
 def generar_overlay_mapa(img_bytes):
-    """
-    Escala la imagen para que entre completa dentro de la grilla
-    manteniendo proporciones (contain), con fondo blanco si sobra espacio.
-    """
     from PIL import Image
 
-    # Tamaño del canvas en pixeles a 150 dpi
     px_ancho = int(MAPA_ANCHO * 150 / 72)
     px_alto  = int(MAPA_ALTO  * 150 / 72)
 
-    # Abrir imagen original
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
     img_w, img_h = img.size
 
-    # Escalar manteniendo proporcion para que entre completa (contain)
     escala = min(px_ancho / img_w, px_alto / img_h)
     nuevo_ancho = int(img_w * escala)
     nuevo_alto  = int(img_h * escala)
     img = img.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
 
-    # Crear canvas blanco y pegar la imagen centrada
     canvas_img = Image.new("RGB", (px_ancho, px_alto), (255, 255, 255))
     offset_x = (px_ancho - nuevo_ancho) // 2
     offset_y = (px_alto  - nuevo_alto)  // 2
     canvas_img.paste(img, (offset_x, offset_y))
 
-    # Guardar como PNG en memoria
     buf = io.BytesIO()
     canvas_img.save(buf, format="PNG")
     buf.seek(0)
 
-    # Insertar en el canvas PDF
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=A4)
     img_reader = ImageReader(buf)
@@ -164,11 +164,47 @@ def generar_overlay_mapa(img_bytes):
     return packet
 
 
+def generar_overlay_firma():
+    """
+    Overlay pagina 2: firma imagen, nombre, CUIT y domicilio del profesional.
+    Requiere firma.png en la raiz del proyecto.
+    """
+    from PIL import Image
+
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet, pagesize=A4)
+
+    # Imagen firma
+    if os.path.exists(FIRMA_IMG):
+        img = Image.open(FIRMA_IMG).convert("RGBA")
+        bg = Image.new("RGB", img.size, (255, 255, 255))
+        bg.paste(img, mask=img.split()[3])
+        buf = io.BytesIO()
+        bg.save(buf, format="PNG")
+        buf.seek(0)
+        can.drawImage(
+            ImageReader(buf), 44, Y_FIRMA_LABEL + 28,
+            width=100, height=35,
+            preserveAspectRatio=True
+        )
+
+    # Nombre
+    can.setFont("Helvetica", 7)
+    can.drawString(44, Y_FIRMA_LABEL + 13, PROFESIONAL_NOMBRE)
+
+    # CUIT
+    can.setFont("Helvetica", 8)
+    can.drawString(75, Y_CUIT_LABEL + 13, PROFESIONAL_CUIT)
+
+    # Domicilio
+    can.drawString(44, Y_DOM_LABEL + 13, PROFESIONAL_DOM)
+
+    can.save()
+    packet.seek(0)
+    return packet
+
+
 def marcar_checkboxes(writer, checkboxes_marcados):
-    """
-    Marca o desmarca los checkboxes en el PDF.
-    checkboxes_marcados: set con los nombres de los campos marcados (ej: {"VF", "DC"})
-    """
     from pypdf.generic import NameObject as N
 
     for page in writer.pages:
@@ -177,9 +213,7 @@ def marcar_checkboxes(writer, checkboxes_marcados):
         for annot_ref in page["/Annots"]:
             annot = annot_ref.get_object()
             campo = str(annot.get("/T", ""))
-            # Buscar si este campo es uno de los checkboxes
             for nombre_form, nombre_pdf_suffix in CHECKBOXES.items():
-                # El campo en el PDF se llama "VF[0]", "DC[0]", etc.
                 if campo == f"{nombre_form}[0]":
                     if nombre_form in checkboxes_marcados:
                         annot[N("/V")]  = N("/1")
@@ -240,6 +274,15 @@ def generar_pdf():
             writer.pages[0].merge_page(mapa_overlay.pages[0])
         except Exception as e:
             print(f"Error insertando imagen del mapa: {e}")
+
+    # Overlay firma profesional (pagina 2)
+    try:
+        firma_packet = generar_overlay_firma()
+        firma_overlay = PdfReader(firma_packet)
+        if len(writer.pages) > 1:
+            writer.pages[1].merge_page(firma_overlay.pages[0])
+    except Exception as e:
+        print(f"Error insertando firma: {e}")
 
     nombre = f"tasacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     ruta = os.path.join(OUTPUT_DIR, nombre)

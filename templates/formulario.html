@@ -661,8 +661,7 @@
         </h2>
         <div class="grid grid-1">
           <div class="campo">
-            <textarea id="detallar" name="detallar" rows="10"
-                      maxlength="6700"></textarea>
+            <textarea id="detallar" name="detallar" rows="10" maxlength="6700"></textarea>
             <small class="contador" id="contadorDetallar">0 / 6700 caracteres</small>
           </div>
         </div>
@@ -803,8 +802,12 @@
     function limpiarFormulario() {
       if (!confirm("¿Limpiar todos los campos para una nueva tasación?")) return;
       document.getElementById("formTasacion").reset();
-      document.getElementById("contadorDetallar").textContent = "0 / 6700 caracteres";
-      document.getElementById("contadorDetallar").style.color = "#718096";
+      // Recargar plantilla en descripción
+      const ta = document.getElementById("detallar");
+      ta.value = TEXTO_PLANTILLA;
+      const ctr = document.getElementById("contadorDetallar");
+      ctr.textContent = ta.value.length + " / 6700 caracteres";
+      ctr.style.color = "#718096";
       quitarImagenMapa();
       _modificado = false;
       document.getElementById("borradorDot").className = "borrador-dot";
@@ -881,80 +884,53 @@
 
     // ── TEXTO PLANTILLA ────────────────────────────────────────────────────
     const TEXTO_PLANTILLA = [
-"INFORME DE TASACIÓN",
+"INFORME DE TASACION",
 "",
-"I) UBICACIÓN DEL INMUEBLE",
-"El inmueble se encuentra ubicado en la calle ________________________ N° ______, Barrio ________________________, de la ciudad de ________________________, Partido de ________________________, Provincia de ________________________.",
+"I) UBICACION DEL INMUEBLE",
+"El inmueble se encuentra ubicado en la calle: ________________________ N°: ______",
+"Barrio: ________________________ Ciudad: ________________________",
+"Partido: ________________________ Provincia: ________________________",
 "",
-"II) DESCRIPCIÓN DEL INMUEBLE",
-"La unidad funcional sometida al régimen de vivienda única y familiar, ubicada en ________________, presenta un estado de conservación: ____________________.",
 "",
-"Cuenta con los siguientes servicios:",
-"- Servicio eléctrico: ____________________",
-"- Gas: ____________________",
-"- Agua: ____________________",
-"- Cloacas: ____________________",
+"II) DESCRIPCION DEL INMUEBLE",
+"La unidad funcional se encuentra en planta: ________________ Estado de conservacion: __________________",
+"Tipo de calle: __________________ Servicios: Electrico: _________ Gas: _________ Agua: _________ Cloacas: _________",
+"Caracteristicas: Tipo de vivienda: ___________ Habitaciones: ____ Banos: ____ Cocina: _________ Living/comedor: _________",
+"Medidas del lote: Frente: ________ m | Fondo: ________ m | Superficie total: ________ m²",
+"Superficie cubierta: ________ m² | Superficie semicubierta: ________ m²",
+"Observaciones: ________________________________________________________________",
+"________________________________________________________________",
 "",
-"Tipo de calle: ____________________________",
-"",
-"Características del lote y construcción:",
-"- Tipo de vivienda: ____________________",
-"- Cantidad de habitaciones: ____________________",
-"- Baños: ____________________",
-"- Cocina: ____________________",
-"- Living / comedor: ____________________",
-"",
-"Medidas del lote:",
-"- Superficie total del lote: ________________ m²",
-"- Frente: ________________ m",
-"- Fondo: ________________ m",
-"",
-"Superficies:",
-"- Superficie cubierta aproximada: ________________ m²",
-"- Superficie semicubierta: ________________ m²",
-"",
-"Observaciones adicionales:",
 "",
 "III) DATOS REGISTRALES",
-"- Partida N°: ________________________",
-"- Lote: ________________________",
-"- Superficie del lote: ________________ m²",
-"",
-"Nomenclatura catastral:",
-"- Circunscripción: ________________",
-"- Sección: ________________",
-"- Manzana: ________________",
-"- Parcela: ________________",
-"",
-"Coordenadas:",
-"- Latitud: ________________",
-"- Longitud: ________________",
-"",
+"Partida N°: ________________________ Lote: ___________ Superficie: ________ m²",
+"Nomenclatura catastral: Circ.: ______ Secc.: ______ Manzana: ______ Parcela: ______",
+"Coordenadas: Latitud: ________________ Longitud: ________________",
 "Localidad: ________________________",
 "",
+"",
 "IV) VALORES DE REFERENCIA (Lotes en la zona)",
-"a) Dirección: ________________________ Superficie: ________ m² Valor: ________ USD",
-"b) Dirección: ________________________ Superficie: ________ m² Valor: ________ USD",
-"c) Dirección: ________________________ Superficie: ________ m² Valor: ________ USD",
+"a) Direccion: ________________________________ Superficie: ________ m² | Valor: USD ________",
+"b) Direccion: ________________________________ Superficie: ________ m² | Valor: USD ________",
+"c) Direccion: ________________________________ Superficie: ________ m² | Valor: USD ________",
+"",
 "",
 "V) FUNDAMENTOS",
 "El presente informe se confecciona a pedido de:",
-"- Nombre y Apellido: ________________________________",
-"- Nacionalidad: ________________________________",
-"- Fecha de nacimiento: ____ / ____ / ______",
-"- DNI: ________________________",
-"- Domicilio: ________________________________________",
+"Nombre y Apellido: ________________________________ DNI: ________________________",
+"Nacionalidad: _______________ Fecha de nacimiento: ____/____/______",
+"Domicilio: ________________________________________________ Localidad: ________________________________",
 "",
-"Localidad: ________________________________",
+"Se realiza tasacion por metodo de comparacion de unidades funcionales (UF), tomando como",
+"referencia valores de propiedades en la zona con caracteristicas constructivas similares,",
+"a fin de aplicar la metodologia de tasacion correspondiente.",
 "",
-"Se realiza una tasación por método de comparación de unidades funcionales (UF), tomando como referencia valores de propiedades en la zona con características constructivas similares, a fin de aplicar la metodología de tasación correspondiente.",
 "",
-"VALOR ESTIMADO",
-"Valor estimado de la unidad funcional:",
-"USD __________________________",
-"(____________________________________________ Dólares Estadounidenses)",
+"VALOR ESTIMADO DE LA UNIDAD FUNCIONAL:",
+"USD: __________________________ (________________________________________________ Dolares Estadounidenses)",
 "",
-"Este valor no indica necesariamente el valor final de mercado, sino una estimación basada en el método comparativo utilizado en el presente informe."
+"Este valor constituye una estimacion basada en el metodo comparativo utilizado.",
+"No indica necesariamente el valor final de mercado del inmueble."
 ].join("\n");
 
     const taDetallar = document.getElementById("detallar");
